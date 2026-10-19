@@ -1,0 +1,19 @@
+routes:
+  - id: grievance-api
+    uri: /api/v1/*
+    upstream:
+      type: roundrobin
+      pass_host: rewrite
+      upstream_host: mysite.localhost
+      nodes:
+        "host.docker.internal:8000": 1
+    plugins:
+      cors: {}
+      limit-count:
+        count: 100
+        time_window: 60
+        key_type: var
+        key: remote_addr
+        rejected_code: 429
+      prometheus: {}
+#END

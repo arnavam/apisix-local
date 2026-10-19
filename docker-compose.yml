@@ -1,0 +1,47 @@
+services:
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.21
+    container_name: apisix-etcd
+    restart: unless-stopped
+    command:
+      - etcd
+      - --name=etcd0
+      - --data-dir=/etcd-data
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://etcd:2379
+    volumes:
+      - etcd_data:/etcd-data
+
+  # Rate-limit counters for the limit-count plugin (APISIX_REDIS_HOST=redis).
+  redis:
+    image: redis:7-alpine
+    container_name: apisix-redis
+    restart: unless-stopped
+
+  apisix:
+    image: apache/apisix:3.19.0-debian
+    container_name: apisix
+    restart: unless-stopped
+    depends_on:
+      - etcd
+      - redis
+    environment:
+      APISIX_ADMIN_KEY: ${APISIX_ADMIN_KEY:?set APISIX_ADMIN_KEY in .env}
+      # oan_a2c secrets, read by APISIX as $env://NAME (set them in .env to use a2c's
+      # partner and dashboard routes).
+      A2C_FRAPPE_SERVICE_AUTHORIZATION: ${A2C_FRAPPE_SERVICE_AUTHORIZATION:-}
+      A2C_OPENG2P_CONSENT_WEBHOOK_KEY: ${A2C_OPENG2P_CONSENT_WEBHOOK_KEY:-}
+      A2C_TELCO_IVR_LEAD_GATEWAY_KEY: ${A2C_TELCO_IVR_LEAD_GATEWAY_KEY:-}
+      A2C_OAN_DASHBOARDS_KEY: ${A2C_OAN_DASHBOARDS_KEY:-}
+    ports:
+      - "9080:9080"   # HTTP traffic
+      - "9443:9443"   # HTTPS traffic
+      - "9180:9180"   # Admin API + dashboard (/ui)
+      - "9091:9091"   # Prometheus metrics
+    volumes:
+      - ./config.yaml:/usr/local/apisix/conf/config.yaml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  etcd_data:

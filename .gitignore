@@ -1,0 +1,12 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.env
+
+# Local diffs and artifacts
+diff.yaml
+
+# OS files
+.DS_Store
+Thumbs.db

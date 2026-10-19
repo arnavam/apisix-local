@@ -1,0 +1,13 @@
+# Gateway-wide resources owned by DevOps. App teams own services/routes in
+# oan_*/apisix/adc.yaml, labelled app=<name>; do not declare those here.
+#
+# Sync with ./adc-sync.sh, which limits this file to the resource types below so it
+# can never delete app services (ADC syncs the full state of every type it is given).
+
+# Applied to every route, including future ones.
+global_rules:
+  request-id:
+    header_name: X-Request-Id
+    include_in_response: true
+  prometheus:
+    prefer_name: true   # label metrics by route/service name, not id
